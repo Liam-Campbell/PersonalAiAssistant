@@ -62,5 +62,6 @@ jobs:
           APP_STORE_CONNECT_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_KEY_CONTENT }}
           MATCH_GIT_URL: ${{ vars.MATCH_REPO_URL }}
           MATCH_PASSWORD: ${{ vars.MATCH_PASSWORD }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           DEVELOPMENT_TEAM: ${{ vars.DEVELOPMENT_TEAM }}
         run: bundle exec fastlane ios beta
