@@ -30,6 +30,51 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
+      - name: Generate app icon asset catalog
+        run: |
+          ICON_DIR="PersonalAiAssistant/Resources/Assets.xcassets/AppIcon.appiconset"
+          mkdir -p "$ICON_DIR"
+
+          cat > PersonalAiAssistant/Resources/Assets.xcassets/Contents.json << 'EOF'
+          {
+            "info" : { "author" : "xcode", "version" : 1 }
+          }
+          EOF
+
+          cat > "$ICON_DIR/Contents.json" << 'EOF'
+          {
+            "images" : [
+              {
+                "filename" : "AppIcon.png",
+                "idiom" : "universal",
+                "platform" : "ios",
+                "size" : "1024x1024"
+              }
+            ],
+            "info" : { "author" : "xcode", "version" : 1 }
+          }
+          EOF
+
+          # Generate a placeholder 1024x1024 PNG if no real icon exists
+          if [ ! -f "$ICON_DIR/AppIcon.png" ]; then
+            python3 -c "
+          import struct, zlib
+          w, h = 1024, 1024
+          row = b'\x00' + b'\x3b\x82\xf6' * w  # Blue (#3B82F6)
+          raw = row * h
+          def chunk(t, d):
+              c = t + d
+              return struct.pack('>I', len(d)) + c + struct.pack('>I', zlib.crc32(c) & 0xffffffff)
+          png = b'\x89PNG\r\n\x1a\n'
+          png += chunk(b'IHDR', struct.pack('>IIBBBBB', w, h, 8, 2, 0, 0, 0))
+          png += chunk(b'IDAT', zlib.compress(raw, 9))
+          png += chunk(b'IEND', b'')
+          with open('$ICON_DIR/AppIcon.png', 'wb') as f:
+              f.write(png)
+          print('Generated placeholder 1024x1024 app icon')
+          "
+          fi
+
       - name: Generate Xcode project
         run: xcodegen generate
 
