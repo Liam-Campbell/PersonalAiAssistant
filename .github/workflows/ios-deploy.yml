@@ -57,10 +57,10 @@ jobs:
       - name: Deploy to TestFlight
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         env:
-          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_ID: ${{ vars.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ vars.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_KEY_CONTENT }}
-          MATCH_GIT_URL: ${{ secrets.MATCH_REPO_URL }}
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
+          MATCH_GIT_URL: ${{ vars.MATCH_REPO_URL }}
+          MATCH_PASSWORD: ${{ vars.MATCH_PASSWORD }}
+          DEVELOPMENT_TEAM: ${{ vars.DEVELOPMENT_TEAM }}
         run: bundle exec fastlane ios beta

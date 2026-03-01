@@ -21,9 +21,9 @@ jobs:
 
       - run: bundle exec fastlane match ${{ github.event.inputs.match_type }} --generate_apple_certs true --readonly false
         env:
-          MATCH_GIT_URL: ${{ secrets.MATCH_REPO_URL }}
-          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.ASC_KEY_CONTENT }}
-          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_PAT_BASE64 }}
+          MATCH_GIT_URL: ${{ vars.MATCH_REPO_URL }}
+          MATCH_PASSWORD: ${{ vars.MATCH_PASSWORD }}
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ vars.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ vars.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.APP_STORE_CONNECT_KEY_CONTENT }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
