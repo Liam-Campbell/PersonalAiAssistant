@@ -1,0 +1,37 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    setup_ci
+
+    app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_KEY_CONTENT"],
+      is_key_content_base64: true
+    )
+
+    match(
+      type: "appstore",
+      readonly: true,
+      git_url: ENV["MATCH_GIT_URL"],
+      app_identifier: "com.personalai.assistant"
+    )
+
+    increment_build_number(
+      build_number: ENV["GITHUB_RUN_NUMBER"]
+    )
+
+    build_app(
+      scheme: "PersonalAiAssistant",
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "PersonalAiAssistant.ipa"
+    )
+
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+end

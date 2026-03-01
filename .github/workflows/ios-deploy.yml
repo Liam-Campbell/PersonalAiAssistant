@@ -1,0 +1,66 @@
+name: iOS Build & Deploy to TestFlight
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ios-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    env:
+      DEVELOPER_DIR: /Applications/Xcode.app/Contents/Developer
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Resolve SPM dependencies
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project PersonalAiAssistant.xcodeproj \
+            -scheme PersonalAiAssistant
+
+      - name: Build for testing
+        run: |
+          xcodebuild build-for-testing \
+            -project PersonalAiAssistant.xcodeproj \
+            -scheme PersonalAiAssistant \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest' \
+            -skipPackagePluginValidation
+
+      - name: Run unit tests
+        run: |
+          xcodebuild test-without-building \
+            -project PersonalAiAssistant.xcodeproj \
+            -scheme PersonalAiAssistantTests \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest'
+
+      - name: Deploy to TestFlight
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_KEY_CONTENT }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
+        run: bundle exec fastlane ios beta

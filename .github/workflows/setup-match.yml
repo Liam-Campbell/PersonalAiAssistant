@@ -1,0 +1,30 @@
+name: Initialize Fastlane Match
+
+on:
+  workflow_dispatch:
+    inputs:
+      match_type:
+        description: "development, appstore, or adhoc"
+        required: true
+        default: "development"
+
+jobs:
+  setup-match:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+
+      - run: gem install fastlane
+
+      - run: fastlane match ${{ github.event.inputs.match_type }} --generate_apple_certs true --readonly false
+        env:
+          MATCH_REPOSITORY: ${{ secrets.MATCH_REPO_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_KEY: ${{ secrets.ASC_KEY_CONTENT }}
+          MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_PAT_BASE64 }}
