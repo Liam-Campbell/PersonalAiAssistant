@@ -19,7 +19,7 @@ jobs:
           ruby-version: "3.2"
           bundler-cache: true
 
-      - run: bundle exec fastlane match ${{ github.event.inputs.match_type }} --generate_apple_certs true --readonly false
+      - run: bundle exec fastlane setup_match type:${{ github.event.inputs.match_type }}
         env:
           MATCH_GIT_URL: ${{ vars.MATCH_REPO_URL }}
           MATCH_PASSWORD: ${{ vars.MATCH_PASSWORD }}
