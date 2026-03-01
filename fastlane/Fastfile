@@ -40,6 +40,14 @@ platform :ios do
       app_identifier: "com.personalai.assistant"
     )
 
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      team_id: ENV["DEVELOPMENT_TEAM"],
+      code_sign_identity: "Apple Distribution",
+      profile_name: ENV["sigh_com.personalai.assistant_appstore_profile-name"],
+      targets: ["PersonalAiAssistant"]
+    )
+
     increment_build_number(
       build_number: ENV["GITHUB_RUN_NUMBER"]
     )
