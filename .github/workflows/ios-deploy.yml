@@ -55,7 +55,7 @@ jobs:
             -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest'
 
       - name: Deploy to TestFlight
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main'
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ vars.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ vars.APP_STORE_CONNECT_ISSUER_ID }}
