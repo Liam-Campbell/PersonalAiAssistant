@@ -17,12 +17,11 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: "3.2"
+          bundler-cache: true
 
-      - run: gem install fastlane
-
-      - run: fastlane match ${{ github.event.inputs.match_type }} --generate_apple_certs true --readonly false
+      - run: bundle exec fastlane match ${{ github.event.inputs.match_type }} --generate_apple_certs true --readonly false
         env:
-          MATCH_REPOSITORY: ${{ secrets.MATCH_REPO_URL }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_REPO_URL }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           APP_STORE_CONNECT_API_KEY_KEY_ID: ${{ secrets.ASC_KEY_ID }}
           APP_STORE_CONNECT_API_KEY_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
