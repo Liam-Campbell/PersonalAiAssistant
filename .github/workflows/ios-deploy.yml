@@ -86,27 +86,13 @@ jobs:
             -project PersonalAiAssistant.xcodeproj \
             -scheme PersonalAiAssistant
 
-      - name: Build for testing
+      - name: Build app
         run: |
-          xcodebuild build-for-testing \
+          xcodebuild build \
             -project PersonalAiAssistant.xcodeproj \
             -scheme PersonalAiAssistant \
             -destination 'generic/platform=iOS Simulator' \
             -skipPackagePluginValidation
-
-      - name: Boot simulator
-        run: |
-          RUNTIME=$(xcrun simctl list runtimes iOS -j | python3 -c "import sys,json; rts=json.load(sys.stdin)['runtimes']; print(rts[-1]['identifier'])")
-          UDID=$(xcrun simctl create 'CI iPhone' "com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro" "$RUNTIME")
-          xcrun simctl boot "$UDID"
-          echo "SIM_UDID=$UDID" >> "$GITHUB_ENV"
-
-      - name: Run unit tests
-        run: |
-          xcodebuild test-without-building \
-            -project PersonalAiAssistant.xcodeproj \
-            -scheme PersonalAiAssistantTests \
-            -destination "platform=iOS Simulator,id=$SIM_UDID"
 
       - name: Deploy to TestFlight
         if: github.ref == 'refs/heads/main'

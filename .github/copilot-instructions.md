@@ -6,19 +6,14 @@ Whenever you make changes to the codebase — adding features, modifying archite
 
 ## Project Overview
 
-PersonalAiAssistant is a native iOS app that captures voice input, transcribes it, and categorizes content into actionable items (Tasks, Projects, Reminders, Shopping Lists). Built with Swift 5.9, SwiftUI, and SwiftData targeting iOS 17.0+.
+PersonalAiAssistant is a native iOS app built with Swift 5.9 and SwiftUI targeting iOS 17.0+. The current app shell is intentionally minimal and launches to a single screen that displays only `hi`.
 
 ## Technology Stack
 
 - **Language:** Swift 5.9
 - **UI:** SwiftUI (declarative, modern syntax)
-- **State:** `@Observable` macro (not `@StateObject`/`@ObservableObject`)
-- **Persistence:** SwiftData (`@Model` entities, no CoreData)
-- **Audio:** AVFoundation (`AVAudioRecorder`)
-- **Transcription:** Apple Speech framework
 - **Project Generation:** XcodeGen (`project.yml`)
 - **CI/CD:** GitHub Actions → Fastlane → TestFlight
-- **Testing:** XCTest (unit tests only)
 - **Dependencies:** No external Swift packages; only Fastlane for automation
 
 ## Architecture
@@ -27,23 +22,16 @@ This project follows **Vertical Slice Architecture** — code is organized by fe
 
 ```
 PersonalAiAssistant/
-├── App/                    # @main entry point, SwiftData container setup
-├── Features/
-│   ├── VoiceCapture/       # Audio recording + speech transcription
-│   ├── NoteProcessing/     # Categorization engine + save orchestration
-│   ├── Dashboard/          # All notes view, filtered list views
-│   ├── ShoppingList/       # Shopping checklist UI
-│   └── Storage/Models/     # SwiftData @Model entities (Note, Tag, NoteCategory)
-├── Navigation/             # MainTabView (root TabView)
-├── Shared/                 # Reusable UI components (NoteRowView)
+├── App/                    # @main entry point
+├── Navigation/             # MainTabView (root single-screen view)
 └── Resources/              # Info.plist, entitlements
 ```
 
 ### Key Rules
 
-- **New features** go in `Features/<FeatureName>/` with their own views, view models, and logic self-contained.
-- **Shared UI components** go in `Shared/`.
-- **Data models** go in `Features/Storage/Models/`.
+- **New features** should be added only when needed and kept self-contained under `Features/<FeatureName>/`.
+- **Shared UI components** should go in `Shared/` if the app grows beyond the current single-screen shell.
+- **Data models** should go in `Features/Storage/Models/` if persistence is reintroduced.
 - **Do not create** flat technical-layer folders like `Controllers/`, `Services/`, or `ViewModels/` at the root.
 
 ## Coding Conventions
@@ -58,12 +46,10 @@ Code must be self-documenting. Do not add comments to Swift source files. Instea
 
 ### Swift & SwiftUI Patterns
 
-- Use `@Observable final class` for view models and stateful services — never `ObservableObject`/`@Published`.
-- Use `@Model` for SwiftData entities.
 - Use `.task { }` for async work in SwiftUI views.
 - Use `NavigationStack` for navigation.
-- Keep view models as `@Observable` classes that compose dependencies (e.g., `AudioRecorder`, `SpeechTranscriber`).
-- Domain logic classes (e.g., `TextCategorizationEngine`) should be stateless and pure where possible.
+- Use `@Observable final class` for view models and stateful services if stateful app logic is added later.
+- Keep new domain logic types stateless and pure where possible.
 
 ### Naming
 
@@ -73,27 +59,11 @@ Code must be self-documenting. Do not add comments to Swift source files. Instea
 
 ## SwiftData Models
 
-- `Note` — core entity with title, content, category, timestamps, and cascading relationship to `Tag`.
-- `Tag` — lightweight entity with a name string.
-- `NoteCategory` — enum (`.task`, `.project`, `.reminder`, `.shopping`) stored via raw value on `Note`.
-- Use in-memory `ModelConfiguration` for tests: `ModelConfiguration(isStoredInMemoryOnly: true)`.
+No SwiftData models are currently present in the active app shell.
 
 ## Testing
 
-- **Framework:** XCTest
-- **Location:** `PersonalAiAssistantTests/`
-- **Focus:** Domain logic unit tests (categorization, note processing). No UI tests.
-- Tests use `@MainActor` and in-memory SwiftData containers.
-- Test methods follow the pattern: `test<Behavior>` (e.g., `testShoppingCategorization`, `testEmptyTextDefaultsToTask`).
-
-### Running Tests
-
-```bash
-xcodebuild test \
-  -project PersonalAiAssistant.xcodeproj \
-  -scheme PersonalAiAssistantTests \
-  -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest'
-```
+- No automated test target is currently configured in this repository.
 
 ## Build & Project Generation
 
@@ -115,7 +85,7 @@ Key project settings:
 
 ### Workflows
 
-- **`ios-deploy.yml`** — Triggers on push to `main`. Generates project → builds → tests → deploys to TestFlight via `fastlane ios beta`.
+- **`ios-deploy.yml`** — Triggers on push to `main`. Generates project → builds → deploys to TestFlight via `fastlane ios beta`.
 - **`setup-match.yml`** — Manual dispatch to initialize/regenerate Fastlane Match certificates and profiles via `fastlane setup_match`.
 
 ### Fastlane

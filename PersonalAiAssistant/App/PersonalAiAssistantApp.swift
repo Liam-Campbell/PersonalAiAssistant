@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 
 @main
 struct PersonalAiAssistantApp: App {
@@ -7,6 +6,5 @@ struct PersonalAiAssistantApp: App {
         WindowGroup {
             MainTabView()
         }
-        .modelContainer(for: Note.self)
     }
 }

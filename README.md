@@ -1,6 +1,6 @@
 # PersonalAiAssistant
 
-A native iOS app that captures voice input, transcribes it to text, and intelligently categorizes content into actionable items — Tasks, Projects, Reminders, and Shopping Lists.
+A native iOS app that currently launches into a single screen showing only `hi`.
 
 ## Technology Stack
 
@@ -8,55 +8,25 @@ A native iOS app that captures voice input, transcribes it to text, and intellig
 |---|---|
 | Language | Swift 5.9 |
 | UI | SwiftUI |
-| Persistence | SwiftData |
-| Audio | AVFoundation |
-| Transcription | Speech framework |
 | CI/CD | GitHub Actions → Fastlane → TestFlight |
 | Project Gen | XcodeGen (`project.yml`) |
 
 ## Architecture
 
-Vertical Slice Architecture — files grouped by feature, not by technical layer.
+Minimal SwiftUI app shell.
 
 ```
 PersonalAiAssistant/
 ├── App/
 │   └── PersonalAiAssistantApp.swift          # @main entry point
-├── Features/
-│   ├── VoiceCapture/
-│   │   ├── AudioRecorder.swift               # AVFoundation recording
-│   │   ├── SpeechTranscriber.swift           # Speech framework transcription
-│   │   ├── VoiceCaptureViewModel.swift       # @Observable view model
-│   │   └── VoiceCaptureView.swift            # SwiftUI recording UI
-│   ├── NoteProcessing/
-│   │   ├── TextCategorizationEngine.swift    # Keyword-based categorizer
-│   │   └── NoteProcessor.swift               # Orchestrates save from text
-│   ├── Dashboard/
-│   │   ├── DashboardView.swift               # All notes with search
-│   │   ├── TaskListView.swift                # Tasks for the day
-│   │   ├── ProjectListView.swift             # Ongoing projects
-│   │   └── ReminderListView.swift            # Reminders
-│   ├── ShoppingList/
-│   │   └── ShoppingListView.swift            # Checklist-style shopping
-│   └── Storage/
-│       └── Models/
-│           ├── Note.swift                    # @Model — core entity
-│           ├── NoteCategory.swift            # Enum with display props
-│           └── Tag.swift                     # @Model — tag entity
 ├── Navigation/
-│   └── MainTabView.swift                     # TabView root navigation
-├── Shared/
-│   └── NoteRowView.swift                     # Reusable note row
+│   └── MainTabView.swift                     # Single-screen root view
 └── Resources/
     ├── Info.plist
     └── PersonalAiAssistant.entitlements
 
-PersonalAiAssistantTests/
-├── TextCategorizationEngineTests.swift
-└── NoteProcessorTests.swift
-
 .github/workflows/
-└── ios-deploy.yml                            # Build → Test → TestFlight
+└── ios-deploy.yml                            # Build → TestFlight
 ```
 
 ## Setup
@@ -70,7 +40,7 @@ PersonalAiAssistantTests/
 The GitHub Actions workflow (`.github/workflows/ios-deploy.yml`) triggers on pushes to `main`:
 
 1. Generates the Xcode project via XcodeGen
-2. Builds and runs unit tests on an iOS Simulator
+2. Builds the app on an iOS Simulator target
 3. Signs and uploads to TestFlight via Fastlane
 
 ### Required GitHub Secrets
@@ -86,11 +56,4 @@ The GitHub Actions workflow (`.github/workflows/ios-deploy.yml`) triggers on pus
 
 ## Testing
 
-Unit tests cover the core categorization engine and note processor logic:
-
-```bash
-xcodebuild test \
-  -project PersonalAiAssistant.xcodeproj \
-  -scheme PersonalAiAssistantTests \
-  -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest'
-```
+There is currently no automated test target configured in this repository.
