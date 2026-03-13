@@ -99,6 +99,8 @@ xcodebuild test \
 
 The Xcode project is generated from `project.yml` using XcodeGen. Do not manually edit `*.xcodeproj` files.
 
+App assets live under `PersonalAiAssistant/Resources/Assets.xcassets/`. The iPhone app icon set is `AppIcon.appiconset`, and the target expects its name to remain `AppIcon`.
+
 ```bash
 xcodegen generate
 ```
