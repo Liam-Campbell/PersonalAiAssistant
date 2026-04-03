@@ -66,7 +66,7 @@ Code must be self-documenting. Do not add comments to Swift source files. Instea
 
 - **Model:** `mlx-community/gemma-4-e2b-it-4bit` (~3.6 GB, 4-bit quantized, text-only)
 - **Download:** iOS `URLSession.background` — survives backgrounding and app termination. Files stored in `Application Support/Models/gemma-4-E2B/`. Model is permanent (no delete option).
-- **Inference:** `MLXLLM.loadModel(from: directory, using: TokenizersLoader())` loads from local files. `ChatSession` manages multi-turn conversation history.
+- **Inference:** `loadModelContainer(directory:)` loads from local files. `ChatSession` manages multi-turn conversation history with streaming via `streamResponse(to:)`.
 - **Target device:** iPhone 15 Pro Max (A17 Pro, 8 GB RAM). Expect ~20–45 tok/s.
 
 ## SwiftData Models

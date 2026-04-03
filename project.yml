@@ -11,10 +11,7 @@ options:
 packages:
   mlx-swift-lm:
     url: https://github.com/ml-explore/mlx-swift-lm
-    branch: main
-  swift-tokenizers-mlx:
-    url: https://github.com/DePasqualeOrg/swift-tokenizers-mlx
-    branch: main
+    from: "2.30.0"
 
 settings:
   base:
@@ -47,5 +44,3 @@ targets:
     dependencies:
       - package: mlx-swift-lm
         product: MLXLLM
-      - package: swift-tokenizers-mlx
-        product: MLXLMTokenizers

@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 import MLXLLM
-import MLXLMTokenizers
+import MLXLMCommon
 
 @Observable final class ChatModel {
 
@@ -23,29 +23,32 @@ import MLXLMTokenizers
         defer { isLoadingModel = false }
 
         do {
-            let context = try await MLXLLM.loadModel(
-                from: ModelDownloadService.modelDirectory,
-                using: TokenizersLoader()
+            let container = try await loadModelContainer(
+                directory: ModelDownloadService.modelDirectory
             )
-            chatSession = ChatSession(context)
+            chatSession = ChatSession(container)
         } catch {
             loadError = error.localizedDescription
         }
     }
 
     func send(_ text: String) async {
-        guard let session = chatSession else { return }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
+        guard !trimmed.isEmpty, chatSession != nil else { return }
 
         messages.append(Message(isUser: true, text: trimmed))
+        messages.append(Message(isUser: false, text: ""))
         isGenerating = true
 
         do {
-            let response = try await session.respond(to: trimmed)
-            messages.append(Message(isUser: false, text: response))
+            let stream = chatSession!.streamResponse(to: trimmed)
+            for try await chunk in stream {
+                messages[messages.count - 1].text += chunk
+            }
         } catch {
-            messages.append(Message(isUser: false, text: "Error: \(error.localizedDescription)"))
+            if messages[messages.count - 1].text.isEmpty {
+                messages[messages.count - 1].text = "Error: \(error.localizedDescription)"
+            }
         }
 
         isGenerating = false
