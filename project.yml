@@ -8,6 +8,14 @@ options:
   generateEmptyDirectories: true
   groupSortPosition: top
 
+packages:
+  mlx-swift-lm:
+    url: https://github.com/ml-explore/mlx-swift-lm
+    branch: main
+  swift-tokenizers-mlx:
+    url: https://github.com/DePasqualeOrg/swift-tokenizers-mlx
+    from: "0.1.0"
+
 settings:
   base:
     SWIFT_VERSION: "5.9"
@@ -36,3 +44,8 @@ targets:
         PROVISIONING_PROFILE_SPECIFIER: "$(PROVISIONING_PROFILE_SPECIFIER)"
     entitlements:
       path: PersonalAiAssistant/Resources/PersonalAiAssistant.entitlements
+    dependencies:
+      - package: mlx-swift-lm
+        product: MLXLLM
+      - package: swift-tokenizers-mlx
+        product: MLXLMTokenizers

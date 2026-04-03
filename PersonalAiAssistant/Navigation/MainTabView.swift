@@ -1,8 +1,13 @@
 import SwiftUI
 
 struct MainTabView: View {
+    var downloadService: ModelDownloadService
+
     var body: some View {
-        Text("hi")
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        if downloadService.downloadState == .completed {
+            ChatScreen()
+        } else {
+            ModelDownloadScreen(downloadService: downloadService)
+        }
     }
 }

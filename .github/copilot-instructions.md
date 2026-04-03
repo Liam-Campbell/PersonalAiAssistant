@@ -6,7 +6,7 @@ Whenever you make changes to the codebase — adding features, modifying archite
 
 ## Project Overview
 
-PersonalAiAssistant is a native iOS app built with Swift 5.9 and SwiftUI targeting iOS 17.0+. The current app shell is intentionally minimal and launches to a single screen that displays only `hi`.
+PersonalAiAssistant is a native iOS app built with Swift 5.9 and SwiftUI targeting iOS 17.0+. The app provides an on-device AI chat experience powered by Google's Gemma 4 E2B model running locally via Apple's MLX framework. On first launch, the user downloads the ~3.6 GB model (via iOS background URLSession), then chats with it entirely offline.
 
 ## Technology Stack
 
@@ -14,7 +14,8 @@ PersonalAiAssistant is a native iOS app built with Swift 5.9 and SwiftUI targeti
 - **UI:** SwiftUI (declarative, modern syntax)
 - **Project Generation:** XcodeGen (`project.yml`)
 - **CI/CD:** GitHub Actions → Fastlane → TestFlight
-- **Dependencies:** No external Swift packages; only Fastlane for automation
+- **On-device AI:** MLX Swift (Apple's ML framework) + Gemma 4 E2B (Google, Apache 2.0)
+- **Dependencies:** `mlx-swift-lm` (branch: main), `swift-tokenizers-mlx` (≥ 0.1.0) via SPM; Fastlane for CI automation
 
 ## Architecture
 
@@ -22,9 +23,13 @@ This project follows **Vertical Slice Architecture** — code is organized by fe
 
 ```
 PersonalAiAssistant/
-├── App/                    # @main entry point
-├── Navigation/             # MainTabView (root single-screen view)
-└── Resources/              # Info.plist, entitlements
+├── App/                    # @main entry point + AppDelegate for background URLSession
+├── Features/
+│   ├── Chat/               # ChatModel (MLX inference) + ChatScreen (chat UI)
+│   └── ModelManager/       # ModelDownloadService (background download) + ModelDownloadScreen
+├── Navigation/             # MainTabView (gates between download screen and chat)
+├── Resources/              # Info.plist, entitlements
+└── Shared/                 # Reusable UI (currently empty)
 ```
 
 ### Key Rules
@@ -57,9 +62,16 @@ Code must be self-documenting. Do not add comments to Swift source files. Instea
 - Properties/methods: `camelCase` (e.g., `isRecording`, `startRecording()`)
 - Files: match the primary type name (e.g., `VoiceCaptureViewModel.swift`)
 
+## AI / MLX Integration
+
+- **Model:** `mlx-community/gemma-4-e2b-it-4bit` (~3.6 GB, 4-bit quantized, text-only)
+- **Download:** iOS `URLSession.background` — survives backgrounding and app termination. Files stored in `Application Support/Models/gemma-4-E2B/`. Model is permanent (no delete option).
+- **Inference:** `MLXLLM.loadModel(from: directory, using: TokenizersLoader())` loads from local files. `ChatSession` manages multi-turn conversation history.
+- **Target device:** iPhone 15 Pro Max (A17 Pro, 8 GB RAM). Expect ~20–45 tok/s.
+
 ## SwiftData Models
 
-No SwiftData models are currently present in the active app shell.
+No SwiftData models are currently present.
 
 ## Testing
 
