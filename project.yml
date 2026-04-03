@@ -14,7 +14,7 @@ packages:
     branch: main
   swift-tokenizers-mlx:
     url: https://github.com/DePasqualeOrg/swift-tokenizers-mlx
-    from: "0.1.0"
+    branch: main
 
 settings:
   base:
