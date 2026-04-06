@@ -6,7 +6,7 @@ Whenever you make changes to the codebase — adding features, modifying archite
 
 ## Project Overview
 
-PersonalAiAssistant is a native iOS app built with Swift 5.9 and SwiftUI targeting iOS 17.0+. The app provides an on-device AI chat experience powered by Google's Gemma 4 E2B model running locally via Apple's MLX framework. On first launch, the user downloads the ~3.6 GB model (via iOS background URLSession), then chats with it entirely offline.
+PersonalAiAssistant is a native iOS app built with Swift 5.9 and SwiftUI targeting iOS 17.0+. The app provides an on-device AI chat experience powered by Google's Gemma 3 4B model running locally via Apple's MLX framework. On first launch, the user downloads the ~3.4 GB model (via iOS background URLSession), then chats with it entirely offline.
 
 ## Technology Stack
 
@@ -14,7 +14,7 @@ PersonalAiAssistant is a native iOS app built with Swift 5.9 and SwiftUI targeti
 - **UI:** SwiftUI (declarative, modern syntax)
 - **Project Generation:** XcodeGen (`project.yml`)
 - **CI/CD:** GitHub Actions → Fastlane → TestFlight
-- **On-device AI:** MLX Swift (Apple's ML framework) + Gemma 4 E2B (Google, Apache 2.0)
+- **On-device AI:** MLX Swift (Apple's ML framework) + Gemma 3 4B (Google, Gemma license)
 - **Dependencies:** `mlx-swift-lm` (branch: main), `swift-tokenizers-mlx` (≥ 0.1.0) via SPM; Fastlane for CI automation
 
 ## Architecture
@@ -64,8 +64,8 @@ Code must be self-documenting. Do not add comments to Swift source files. Instea
 
 ## AI / MLX Integration
 
-- **Model:** `mlx-community/gemma-4-e2b-it-4bit` (~3.6 GB, 4-bit quantized, text-only)
-- **Download:** iOS `URLSession.background` — survives backgrounding and app termination. Files stored in `Application Support/Models/gemma-4-E2B/`. Model is permanent (no delete option).
+- **Model:** `mlx-community/gemma-3-4b-it-4bit` (~3.4 GB, 4-bit quantized, text-only)
+- **Download:** iOS `URLSession.background` — survives backgrounding and app termination. Files stored in `Application Support/Models/gemma-3-4B/`. Model is permanent (no delete option).
 - **Inference:** `loadModelContainer(directory:)` loads from local files. `ChatSession` manages multi-turn conversation history with streaming via `streamResponse(to:)`.
 - **Target device:** iPhone 15 Pro Max (A17 Pro, 8 GB RAM). Expect ~20–45 tok/s.
 

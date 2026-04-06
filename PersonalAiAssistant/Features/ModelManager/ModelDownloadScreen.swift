@@ -14,7 +14,7 @@ struct ModelDownloadScreen: View {
             Text("AI Model Required")
                 .font(.title2.bold())
 
-            Text("Download the Gemma 4 language model to chat offline. This requires about 3.6 GB of storage.")
+            Text("Download the Gemma 3 language model to chat offline. This requires about 3.4 GB of storage.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 32)

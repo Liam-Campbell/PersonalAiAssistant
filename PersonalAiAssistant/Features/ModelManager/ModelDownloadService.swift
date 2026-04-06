@@ -14,21 +14,19 @@ import Observation
 
     static let modelDirectory: URL = {
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        return appSupport.appendingPathComponent("Models/gemma-4-E2B", isDirectory: true)
+        return appSupport.appendingPathComponent("Models/gemma-3-4B", isDirectory: true)
     }()
 
     private static let sessionIdentifier = "com.personalai.assistant.model-download"
-    private static let baseURL = "https://huggingface.co/mlx-community/gemma-4-e2b-it-4bit/resolve/main"
+    private static let baseURL = "https://huggingface.co/mlx-community/gemma-3-4b-it-4bit/resolve/main"
 
     static let requiredFiles = [
         "config.json",
         "generation_config.json",
         "model.safetensors",
         "model.safetensors.index.json",
-        "processor_config.json",
         "tokenizer.json",
-        "tokenizer_config.json",
-        "chat_template.jinja"
+        "tokenizer_config.json"
     ]
 
     private let sessionDelegate: BackgroundDownloadDelegate
