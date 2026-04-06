@@ -19,10 +19,10 @@ struct ChatScreen: View {
                 "Failed to Load Model",
                 isPresented: Binding(
                     get: { model.loadError != nil },
-                    set: { if !$0 { model.loadError = nil } }
+                    set: { if !$0 { model.dismissLoadError() } }
                 )
             ) {
-                Button("OK") { model.loadError = nil }
+                Button("OK") { model.dismissLoadError() }
             } message: {
                 Text(model.loadError ?? "")
             }

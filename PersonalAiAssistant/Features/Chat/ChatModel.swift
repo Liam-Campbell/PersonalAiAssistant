@@ -20,6 +20,7 @@ import MLXLMCommon
 
     func loadModel() async {
         isLoadingModel = true
+        loadError = nil
         defer { isLoadingModel = false }
 
         do {
@@ -30,6 +31,10 @@ import MLXLMCommon
         } catch {
             loadError = error.localizedDescription
         }
+    }
+
+    func dismissLoadError() {
+        loadError = nil
     }
 
     func send(_ text: String) async {
