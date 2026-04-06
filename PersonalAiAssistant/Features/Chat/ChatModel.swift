@@ -24,12 +24,41 @@ import MLXLMCommon
         defer { isLoadingModel = false }
 
         do {
+            patchConfigIfNeeded()
             let container = try await loadModelContainer(
                 directory: ModelDownloadService.modelDirectory
             )
             chatSession = ChatSession(container)
         } catch {
             loadError = error.localizedDescription
+        }
+    }
+
+    private func patchConfigIfNeeded() {
+        let configURL = ModelDownloadService.modelDirectory.appendingPathComponent("config.json")
+        guard let data = try? Data(contentsOf: configURL),
+              var json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              var textConfig = json["text_config"] as? [String: Any] else { return }
+
+        let requiredFields: [String: Int] = [
+            "num_attention_heads": 8,
+            "num_key_value_heads": 4,
+            "head_dim": 256
+        ]
+
+        var patched = false
+        for (key, value) in requiredFields {
+            let existingValue = (textConfig[key] as? NSNumber)?.intValue
+            if existingValue != value {
+                textConfig[key] = value
+                patched = true
+            }
+        }
+
+        guard patched else { return }
+        json["text_config"] = textConfig
+        if let updatedData = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]) {
+            try? updatedData.write(to: configURL)
         }
     }
 

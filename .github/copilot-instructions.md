@@ -15,7 +15,7 @@ PersonalAiAssistant is a native iOS app built with Swift 5.9 and SwiftUI targeti
 - **Project Generation:** XcodeGen (`project.yml`)
 - **CI/CD:** GitHub Actions → Fastlane → TestFlight
 - **On-device AI:** MLX Swift (Apple's ML framework) + Gemma 3 4B (Google, Gemma license)
-- **Dependencies:** `mlx-swift-lm` (branch: main), `swift-tokenizers-mlx` (≥ 0.1.0) via SPM; Fastlane for CI automation
+- **Dependencies:** `mlx-swift-lm` (SPM, `from: 2.30.0`) and Fastlane for CI automation
 
 ## Architecture
 
@@ -64,9 +64,10 @@ Code must be self-documenting. Do not add comments to Swift source files. Instea
 
 ## AI / MLX Integration
 
-- **Model:** `mlx-community/gemma-3-4b-it-4bit` (~3.4 GB, 4-bit quantized, text-only)
+- **Model:** `mlx-community/gemma-3-4b-it-4bit` (~3.4 GB, 4-bit quantized). The downloaded package is a Gemma 3 multimodal conversion, but the app currently uses text-only chat.
 - **Download:** iOS `URLSession.background` — survives backgrounding and app termination. Files stored in `Application Support/Models/gemma-3-4B/`. Model is permanent (no delete option).
 - **Inference:** `loadModelContainer(directory:)` loads from local files. `ChatSession` manages multi-turn conversation history with streaming via `streamResponse(to:)`.
+- **Config repair:** The Hugging Face `config.json` omits some Gemma 3 4B text fields required by `mlx-swift-lm`. `ChatModel` repairs `text_config.num_attention_heads`, `text_config.num_key_value_heads`, and `text_config.head_dim` before loading the model.
 - **Target device:** iPhone 15 Pro Max (A17 Pro, 8 GB RAM). Expect ~20–45 tok/s.
 
 ## SwiftData Models
