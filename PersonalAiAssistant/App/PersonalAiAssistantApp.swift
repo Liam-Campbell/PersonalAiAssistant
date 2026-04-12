@@ -53,6 +53,7 @@ struct PersonalAiAssistantApp: App {
             MainTabView(downloadService: appDelegate.downloadService)
                 .modelContainer(syncedContainer)
                 .task {
+                    await AppLogger.shared.importCrashLogsIfNeeded()
                     await AppLogger.shared.pruneOldEntries()
                 }
         }

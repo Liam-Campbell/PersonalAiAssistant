@@ -71,16 +71,23 @@ struct ReceiptParser {
     }
 
     private func runModel(prompt: String, modelContainer: MLXLMCommon.ModelContainer) async throws -> String {
+        AppLogger.shared.crashLog(.info, source: "ReceiptParser", message: "Creating ChatSession, prompt length: \(prompt.count)")
         let session = ChatSession(modelContainer)
+        AppLogger.shared.crashLog(.info, source: "ReceiptParser", message: "ChatSession created, starting stream")
         var fullResponse = ""
         var tokenCount = 0
         let maxTokens = 1024
         let stream = session.streamResponse(to: prompt)
+        AppLogger.shared.crashLog(.info, source: "ReceiptParser", message: "Stream created, awaiting first token")
         for try await chunk in stream {
+            if tokenCount == 0 {
+                AppLogger.shared.crashLog(.info, source: "ReceiptParser", message: "First token received")
+            }
             fullResponse += chunk
             tokenCount += 1
             if tokenCount >= maxTokens { break }
         }
+        AppLogger.shared.crashLog(.info, source: "ReceiptParser", message: "Generation complete, \(tokenCount) tokens, \(fullResponse.count) chars")
         return fullResponse
     }
 

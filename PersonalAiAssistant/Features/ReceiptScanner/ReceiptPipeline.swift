@@ -47,13 +47,17 @@ enum ProcessingState: Equatable {
     @MainActor
     func extractText(from image: UIImage) async throws -> String {
         processingState = .extractingText
+        AppLogger.shared.crashLog(.info, source: "ReceiptPipeline", message: "Starting receipt extraction")
         await AppLogger.shared.log(.info, source: "ReceiptPipeline", message: "Starting receipt extraction")
         do {
             let downsized = downsizeForOCR(image)
+            AppLogger.shared.crashLog(.info, source: "ReceiptPipeline", message: "Image downsized, starting OCR")
             let ocrText = try await ocrService.extractText(from: downsized)
+            AppLogger.shared.crashLog(.info, source: "ReceiptPipeline", message: "OCR extracted \(ocrText.count) characters")
             await AppLogger.shared.log(.info, source: "ReceiptPipeline", message: "OCR extracted \(ocrText.count) characters")
             return ocrText
         } catch {
+            AppLogger.shared.crashLog(.error, source: "ReceiptPipeline", message: "OCR failed", detail: error.localizedDescription)
             await AppLogger.shared.log(.error, source: "ReceiptPipeline", message: "OCR failed", detail: error.localizedDescription)
             processingState = .failed(error.localizedDescription)
             throw error
@@ -63,6 +67,7 @@ enum ProcessingState: Equatable {
     @MainActor
     func processWithText(ocrText: String) async {
         do {
+            AppLogger.shared.crashLog(.info, source: "ReceiptPipeline", message: "Starting LLM parsing (3 consensus attempts), ocrText length: \(ocrText.count)")
             await AppLogger.shared.log(.info, source: "ReceiptPipeline", message: "Starting LLM parsing (3 consensus attempts)")
             await AppLogger.shared.flush()
 
@@ -76,9 +81,11 @@ enum ProcessingState: Equatable {
             let receipt = try save(parsed: parsed, ocrText: ocrText, status: status)
             lastSavedReceiptId = receipt.id
 
+            AppLogger.shared.crashLog(.info, source: "ReceiptPipeline", message: "Receipt saved with status: \(status.rawValue)")
             await AppLogger.shared.log(.info, source: "ReceiptPipeline", message: "Receipt saved with status: \(status.rawValue)", relatedEntityId: receipt.id)
             processingState = .completed(status)
         } catch {
+            AppLogger.shared.crashLog(.error, source: "ReceiptPipeline", message: "Pipeline failed", detail: error.localizedDescription)
             await AppLogger.shared.log(.error, source: "ReceiptPipeline", message: "Pipeline failed", detail: error.localizedDescription)
             processingState = .failed(error.localizedDescription)
         }
@@ -120,6 +127,7 @@ enum ProcessingState: Equatable {
 
         for attempt in 1...3 {
             processingState = .parsingAttempt(attempt)
+            AppLogger.shared.crashLog(.info, source: "ReceiptPipeline", message: "Starting model inference attempt \(attempt) of 3")
             await AppLogger.shared.log(.debug, source: "ReceiptPipeline", message: "Starting model inference attempt \(attempt) of 3")
             await AppLogger.shared.flush()
 
@@ -127,6 +135,7 @@ enum ProcessingState: Equatable {
             results.append(parsed)
             rawOutputs.append(rawOutput)
 
+            AppLogger.shared.crashLog(.info, source: "ReceiptPipeline", message: "Model attempt \(attempt) of 3 completed")
             await AppLogger.shared.log(
                 .debug,
                 source: "ReceiptPipeline",
