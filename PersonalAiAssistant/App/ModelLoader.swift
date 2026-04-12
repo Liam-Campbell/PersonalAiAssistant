@@ -3,35 +3,31 @@ import Observation
 import MLXLLM
 import MLXLMCommon
 
-@Observable final class ChatModel {
-
-    struct Message: Identifiable {
-        let id = UUID()
-        let isUser: Bool
-        var text: String
-    }
-
-    private(set) var messages: [Message] = []
-    private(set) var isGenerating = false
-    private(set) var isLoadingModel = true
+@Observable final class ModelLoader {
+    private(set) var isLoading = true
     private(set) var loadError: String?
+    private(set) var modelContainer: ModelContainer?
 
-    private var chatSession: ChatSession?
-
-    func loadModel() async {
-        isLoadingModel = true
+    func load() async {
+        isLoading = true
         loadError = nil
-        defer { isLoadingModel = false }
+        defer { isLoading = false }
 
         do {
             patchConfigIfNeeded()
             let container = try await loadModelContainer(
                 directory: ModelDownloadService.modelDirectory
             )
-            chatSession = ChatSession(container)
+            modelContainer = container
+            await AppLogger.shared.log(.info, source: "ModelLoader", message: "Model loaded successfully")
         } catch {
             loadError = error.localizedDescription
+            await AppLogger.shared.log(.error, source: "ModelLoader", message: "Failed to load model", detail: error.localizedDescription)
         }
+    }
+
+    func dismissLoadError() {
+        loadError = nil
     }
 
     private func patchConfigIfNeeded() {
@@ -60,31 +56,5 @@ import MLXLMCommon
         if let updatedData = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]) {
             try? updatedData.write(to: configURL)
         }
-    }
-
-    func dismissLoadError() {
-        loadError = nil
-    }
-
-    func send(_ text: String) async {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty, chatSession != nil else { return }
-
-        messages.append(Message(isUser: true, text: trimmed))
-        messages.append(Message(isUser: false, text: ""))
-        isGenerating = true
-
-        do {
-            let stream = chatSession!.streamResponse(to: trimmed)
-            for try await chunk in stream {
-                messages[messages.count - 1].text += chunk
-            }
-        } catch {
-            if messages[messages.count - 1].text.isEmpty {
-                messages[messages.count - 1].text = "Error: \(error.localizedDescription)"
-            }
-        }
-
-        isGenerating = false
     }
 }
