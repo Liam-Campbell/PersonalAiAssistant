@@ -45,15 +45,24 @@ enum ProcessingState: Equatable {
     }
 
     @MainActor
-    func process(image: UIImage) async {
+    func extractText(from image: UIImage) async throws -> String {
         processingState = .extractingText
         await AppLogger.shared.log(.info, source: "ReceiptPipeline", message: "Starting receipt extraction")
-
         do {
             let downsized = downsizeForOCR(image)
             let ocrText = try await ocrService.extractText(from: downsized)
             await AppLogger.shared.log(.info, source: "ReceiptPipeline", message: "OCR extracted \(ocrText.count) characters")
+            return ocrText
+        } catch {
+            await AppLogger.shared.log(.error, source: "ReceiptPipeline", message: "OCR failed", detail: error.localizedDescription)
+            processingState = .failed(error.localizedDescription)
+            throw error
+        }
+    }
 
+    @MainActor
+    func processWithText(ocrText: String) async {
+        do {
             await AppLogger.shared.log(.info, source: "ReceiptPipeline", message: "Starting LLM parsing (3 consensus attempts)")
             await AppLogger.shared.flush()
 
@@ -76,14 +85,8 @@ enum ProcessingState: Equatable {
     }
 
     @MainActor
-    func retry(image: UIImage, existingReceiptId: UUID) async {
-        processingState = .extractingText
-        await AppLogger.shared.log(.info, source: "ReceiptPipeline", message: "Retrying extraction for receipt", relatedEntityId: existingReceiptId)
-
+    func retryWithText(ocrText: String, existingReceiptId: UUID) async {
         do {
-            let downsized = downsizeForOCR(image)
-            let ocrText = try await ocrService.extractText(from: downsized)
-
             await AppLogger.shared.log(.info, source: "ReceiptPipeline", message: "Starting LLM parsing (3 consensus attempts)")
             await AppLogger.shared.flush()
 

@@ -73,9 +73,13 @@ struct ReceiptParser {
     private func runModel(prompt: String, modelContainer: MLXLMCommon.ModelContainer) async throws -> String {
         let session = ChatSession(modelContainer)
         var fullResponse = ""
+        var tokenCount = 0
+        let maxTokens = 1024
         let stream = session.streamResponse(to: prompt)
         for try await chunk in stream {
             fullResponse += chunk
+            tokenCount += 1
+            if tokenCount >= maxTokens { break }
         }
         return fullResponse
     }

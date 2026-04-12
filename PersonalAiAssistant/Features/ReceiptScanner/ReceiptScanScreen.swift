@@ -119,14 +119,22 @@ struct ReceiptScanScreen: View {
     }
 
     private func handleImageSelection(item: PhotosPickerItem) async {
-        guard let data = try? await item.loadTransferable(type: Data.self),
-              let image = UIImage(data: data) else {
+        guard let pipeline else { return }
+        selectedItem = nil
+
+        let ocrText: String
+        do {
+            guard let data = try await item.loadTransferable(type: Data.self),
+                  let image = UIImage(data: data) else { return }
+            ocrText = try await pipeline.extractText(from: image)
+        } catch {
             return
         }
-        if let existingId = existingReceiptId ?? pipeline?.lastSavedReceiptId {
-            await pipeline?.retry(image: image, existingReceiptId: existingId)
+
+        if let existingId = existingReceiptId ?? pipeline.lastSavedReceiptId {
+            await pipeline.retryWithText(ocrText: ocrText, existingReceiptId: existingId)
         } else {
-            await pipeline?.process(image: image)
+            await pipeline.processWithText(ocrText: ocrText)
         }
     }
 }
