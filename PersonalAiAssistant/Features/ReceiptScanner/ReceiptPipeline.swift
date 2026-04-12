@@ -37,9 +37,9 @@ enum ProcessingState: Equatable {
     private let ocrService = OCRService()
     private let parser = ReceiptParser()
     private let modelContainer: MLXLMCommon.ModelContainer
-    private let modelContext: ModelContext
+    private let modelContext: SwiftData.ModelContext
 
-    init(modelContainer: MLXLMCommon.ModelContainer, modelContext: ModelContext) {
+    init(modelContainer: MLXLMCommon.ModelContainer, modelContext: SwiftData.ModelContext) {
         self.modelContainer = modelContainer
         self.modelContext = modelContext
     }
