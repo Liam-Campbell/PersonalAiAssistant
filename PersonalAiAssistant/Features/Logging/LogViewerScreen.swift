@@ -5,7 +5,7 @@ struct LogViewerScreen: View {
     @State private var selectedLevels: Set<LogLevel> = Set(LogLevel.allCases)
     @State private var searchText = ""
     @State private var logEntries: [LogEntry] = []
-    @State private var expandedEntryId: UUID?
+    @State private var selectedEntry: LogEntry?
     @State private var logContext: ModelContext?
 
     var body: some View {
@@ -20,6 +20,9 @@ struct LogViewerScreen: View {
         .onAppear { fetchLogs() }
         .onChange(of: selectedLevels) { _, _ in fetchLogs() }
         .onChange(of: searchText) { _, _ in fetchLogs() }
+        .sheet(item: $selectedEntry) { entry in
+            LogDetailSheet(entry: entry)
+        }
     }
 
     private var filterBar: some View {
@@ -46,10 +49,8 @@ struct LogViewerScreen: View {
 
     private var logList: some View {
         List(logEntries) { entry in
-            LogEntryRow(entry: entry, isExpanded: expandedEntryId == entry.id) {
-                withAnimation {
-                    expandedEntryId = expandedEntryId == entry.id ? nil : entry.id
-                }
+            LogEntryRow(entry: entry) {
+                selectedEntry = entry
             }
         }
         .listStyle(.plain)
@@ -108,41 +109,123 @@ private struct FilterPill: View {
 
 private struct LogEntryRow: View {
     let entry: LogEntry
-    let isExpanded: Bool
     let onTap: () -> Void
 
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Circle()
-                        .fill(colorForEntry)
-                        .frame(width: 8, height: 8)
-                    Text(entry.source)
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                    Spacer()
-                    Text(entry.timestamp, style: .time)
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Circle()
+                            .fill(colorForEntry)
+                            .frame(width: 8, height: 8)
+                        Text(entry.source)
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                        Spacer()
+                        Text(entry.timestamp, style: .time)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    Text(entry.message)
+                        .font(.subheadline)
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
                 }
-                Text(entry.message)
-                    .font(.subheadline)
-                    .foregroundStyle(.primary)
-                    .lineLimit(isExpanded ? nil : 2)
-
-                if isExpanded, let detail = entry.detail {
-                    Text(detail)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .padding(8)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(.systemGray6))
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
+                Image(systemName: "chevron.right")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
             }
         }
         .buttonStyle(.plain)
+    }
+
+    private var colorForEntry: Color {
+        switch entry.level {
+        case .debug: return .gray
+        case .info: return .blue
+        case .warning: return .orange
+        case .error: return .red
+        }
+    }
+}
+
+private struct LogDetailSheet: View {
+    let entry: LogEntry
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Overview") {
+                    LabeledContent("Level") {
+                        Text(entry.level.rawValue.capitalized)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(colorForEntry)
+                    }
+                    LabeledContent("Source") {
+                        Text(entry.source)
+                            .font(.subheadline)
+                    }
+                    LabeledContent("Time") {
+                        Text(entry.timestamp, format: .dateTime.year().month().day().hour().minute().second())
+                            .font(.subheadline)
+                    }
+                }
+
+                Section("Message") {
+                    Text(entry.message)
+                        .font(.body)
+                        .textSelection(.enabled)
+                }
+
+                if let detail = entry.detail, !detail.isEmpty {
+                    Section("Detail") {
+                        ScrollView(.horizontal, showsIndicators: true) {
+                            Text(detail)
+                                .font(.system(.caption, design: .monospaced))
+                                .textSelection(.enabled)
+                        }
+                    }
+                }
+
+                if let relatedId = entry.relatedEntityId {
+                    Section("Related Entity") {
+                        Text(relatedId.uuidString)
+                            .font(.system(.caption, design: .monospaced))
+                            .textSelection(.enabled)
+                    }
+                }
+            }
+            .navigationTitle("Log Entry")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                }
+                ToolbarItem(placement: .topBarLeading) {
+                    ShareLink(item: formattedLogText) {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                }
+            }
+        }
+    }
+
+    private var formattedLogText: String {
+        var text = """
+        [\(entry.level.rawValue.uppercased())] \(entry.source)
+        Time: \(entry.timestamp)
+        Message: \(entry.message)
+        """
+        if let detail = entry.detail {
+            text += "\nDetail: \(detail)"
+        }
+        if let relatedId = entry.relatedEntityId {
+            text += "\nRelated: \(relatedId.uuidString)"
+        }
+        return text
     }
 
     private var colorForEntry: Color {

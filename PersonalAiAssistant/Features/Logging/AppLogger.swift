@@ -24,6 +24,12 @@ import SwiftData
     }
 
     @MainActor
+    func flush() {
+        guard let container else { return }
+        try? container.mainContext.save()
+    }
+
+    @MainActor
     func pruneOldEntries(olderThan days: Int = 30) {
         guard let container else { return }
         let context = container.mainContext

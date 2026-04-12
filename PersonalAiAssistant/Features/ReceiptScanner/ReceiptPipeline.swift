@@ -50,8 +50,12 @@ enum ProcessingState: Equatable {
         await AppLogger.shared.log(.info, source: "ReceiptPipeline", message: "Starting receipt extraction")
 
         do {
-            let ocrText = try await ocrService.extractText(from: image)
+            let downsized = downsizeForOCR(image)
+            let ocrText = try await ocrService.extractText(from: downsized)
             await AppLogger.shared.log(.info, source: "ReceiptPipeline", message: "OCR extracted \(ocrText.count) characters")
+
+            await AppLogger.shared.log(.info, source: "ReceiptPipeline", message: "Starting LLM parsing (3 consensus attempts)")
+            await AppLogger.shared.flush()
 
             let (parsed, consensusReached) = try await parseWithConsensus(ocrText: ocrText)
 
@@ -77,7 +81,11 @@ enum ProcessingState: Equatable {
         await AppLogger.shared.log(.info, source: "ReceiptPipeline", message: "Retrying extraction for receipt", relatedEntityId: existingReceiptId)
 
         do {
-            let ocrText = try await ocrService.extractText(from: image)
+            let downsized = downsizeForOCR(image)
+            let ocrText = try await ocrService.extractText(from: downsized)
+
+            await AppLogger.shared.log(.info, source: "ReceiptPipeline", message: "Starting LLM parsing (3 consensus attempts)")
+            await AppLogger.shared.flush()
 
             let (parsed, consensusReached) = try await parseWithConsensus(ocrText: ocrText)
 
@@ -109,6 +117,9 @@ enum ProcessingState: Equatable {
 
         for attempt in 1...3 {
             processingState = .parsingAttempt(attempt)
+            await AppLogger.shared.log(.debug, source: "ReceiptPipeline", message: "Starting model inference attempt \(attempt) of 3")
+            await AppLogger.shared.flush()
+
             let (parsed, rawOutput) = try await parser.parseSingleAttempt(ocrText: ocrText, modelContainer: modelContainer)
             results.append(parsed)
             rawOutputs.append(rawOutput)
@@ -116,7 +127,7 @@ enum ProcessingState: Equatable {
             await AppLogger.shared.log(
                 .debug,
                 source: "ReceiptPipeline",
-                message: "Model attempt \(attempt) of 3",
+                message: "Model attempt \(attempt) of 3 completed",
                 detail: rawOutput
             )
         }
@@ -246,5 +257,15 @@ enum ProcessingState: Equatable {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.date(from: dateString) ?? Date()
+    }
+
+    private func downsizeForOCR(_ image: UIImage) -> UIImage {
+        let maxDimension: CGFloat = 2048
+        let size = image.size
+        guard size.width > maxDimension || size.height > maxDimension else { return image }
+        let scale = maxDimension / max(size.width, size.height)
+        let newSize = CGSize(width: size.width * scale, height: size.height * scale)
+        let renderer = UIGraphicsImageRenderer(size: newSize)
+        return renderer.image { _ in image.draw(in: CGRect(origin: .zero, size: newSize)) }
     }
 }
